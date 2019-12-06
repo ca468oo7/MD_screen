@@ -3,6 +3,7 @@
 #Virginia Tech Department of Biochemistry, http://www.mdtutorials.com/gmx/complex/index.html
 #Prepare ligand mol2 file, str file (from CGenFF server), and protein pdb without hydrogen:
 #lig.mol2, lig.str, lig.itp, lig.prm, lig_ini.pdb, protein_noH.pdb, em.mdp, nvt.mdp, npt.mdp, md.mdp, charmm36-mar2019.ff in the same folder
+#By Fang Fu, Hao Li
 
 import os
 import shutil
