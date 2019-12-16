@@ -1,0 +1,68 @@
+#Provides different methods to deal with data back from high throughput computing center.
+#Will generate the follwing info:
+#RMSD of the ligand
+#Total interaction energy of interaction
+
+import os
+import shutil
+
+def move_out(direc):
+    for folder in os.listdir(direc):
+        if os.path.isdir(folder) and 'ZINC' in folder:
+            try:
+                for fil in os.listdir(folder+'//MD'):
+                    shutil.move(folder+'//MD//'+fil, folder+'//'+fil)
+                print folder+' moved'
+                
+                
+            except:
+                print folder+' no md files'
+
+def change_name(direc):
+	for folder in os.listdir(direc):
+		if os.path.isdir(folder) and 'ZINC' in folder:
+			print folder
+			for fil in os.listdir(folder):
+				if 'md_0_1' in fil and 'prev' not in fil:
+					print fil
+					shutil.move(folder+'//'+fil, folder+'//'+fil[:6]+fil[-4:])
+
+def extract(direc):
+	for folder in os.listdir(direc):
+		if 'tar.gz' in folder and 'ZINC' in folder:
+			os.system('tar -xvf '+folder)
+			print folder+' extracted'
+
+
+def gen_data(ligname):
+    path = 'YOUR DIRECTORY'
+    if os.path.isdir(ligname) and 'md_0_1.xtc' in os.listdir(ligname):
+        shutil.copy(path+'//ie.mdp', path+'//'+ligname+'//ie.mdp')
+        
+        os.chdir(ligname)
+        #os.system("sed -i 's/LG6/{:s}/g' ie.mdp".format(ligname))
+        os.system('echo "1\n0" | gmx trjconv -s md_0_1.tpr -f md_0_1.xtc -o md_0_1_center.xtc -center -pbc mol -ur compact')
+        os.system('gmx grompp -f ie.mdp -c npt.gro -t npt.cpt -p topol.top -n index.ndx -o ie.tpr -maxwarn 10')
+        os.system('gmx mdrun -deffnm ie -rerun md_0_1.xtc -nb cpu')
+        os.system('echo "21 22 0" | gmx energy -f ie.edr -o inter_E_{:s}.xvg'.format(ligname))
+        os.system('echo "13 & ! a H*\nq" | gmx make_ndx -f em.gro -n index.ndx')
+        os.system('echo "1\n23" | gmx rms -s em.tpr -f md_0_1_center.xtc -n index.ndx -tu ns -o rmsd_{:s}.xvg'.format(ligname))
+        os.system('cp *.xvg ../')
+        os.chdir(path)
+
+
+#first move results from MD directory
+#move_out(os.getcwd())
+
+#change_name('YOUR DIRECTORY')
+extract('YOUR DIRECTORY')
+
+sss = raw_input('press any key to continue:')
+
+
+#then get data
+for lig in os.listdir('YOUR DIRECTORY'):
+	if os.path.isdir(lig) and 'ZINC' in lig:
+		gen_data(lig)
+
+
