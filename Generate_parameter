@@ -1,0 +1,68 @@
+from selenium import webdriver
+import os
+import time
+import shutil
+
+driver = webdriver.Chrome()
+driver.get('https://cgenff.umaryland.edu/initguess/')
+main_window = driver.current_window_handle
+driver.find_element_by_name('usrName').send_keys('Your UserName')
+driver.find_element_by_name('curPwd').send_keys('Your Password')
+driver.find_element_by_name('curPwd').submit()
+# driver.find_element_by_name('filename').send_keys('Path to mol2 file')
+# time.sleep(2)
+# driver.find_element_by_name('submit').click()
+# time.sleep(3)
+# driver.find_element_by_class_name('out').click()
+
+# all_handles = driver.window_handles
+# for handle in all_handles:
+#     if handle != main_window:
+#         driver.switch_to.window(handle)
+# text = driver.find_element_by_tag_name('body').text
+# with open('D:\\mol2\\ZINC00624773.str', 'w') as f:
+#     for line in text:
+#         f.write(line)
+
+
+# driver.close()
+# driver.switch_to.window(main_window)
+# driver.find_elements_by_class_name('uploadbtn2')[0].click()
+
+molpath = 'D:\\mol2\\92_md\\'
+for mol in os.listdir(molpath):
+    if 'mol2' in mol:
+        driver.find_element_by_name('filename').send_keys(molpath+mol)
+        time.sleep(2)
+        driver.find_element_by_name('submit').click()
+        time.sleep(3)
+        driver.find_element_by_class_name('out').click()
+        
+        all_handles = driver.window_handles
+        for handle in all_handles:
+            if handle != main_window:
+                driver.switch_to.window(handle)
+        text = driver.find_element_by_tag_name('body').text
+        if len(text) > 10:
+            with open(molpath+mol[:-4]+'str', 'w') as f:
+                for line in text:
+                    f.write(line)
+        else:
+            print(mol + ' cannot generate str.')
+        driver.close()
+        driver.switch_to.window(main_window)
+        driver.find_elements_by_class_name('uploadbtn2')[0].click()
+
+driver.quit()
+
+os.chdir(molpath)
+for fi in os.listdir(molpath):
+    if 'str' in fi:
+        name = fi[:-4]
+        os.mkdir(molpath+'//'+fi[:-4])
+        shutil.move(fi, name)
+        shutil.move(name+'.mol2', name)
+
+
+
+
