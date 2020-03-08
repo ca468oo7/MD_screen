@@ -1,0 +1,58 @@
+from  subprocess import Popen, PIPE
+
+a  = 'gmx grompp -f ions.mdp -c solv.gro -p topol.top -o ions.tpr -maxwarn 10'
+process = Popen(a.split(), stdout=PIPE,stderr=PIPE)
+stdout, stderr = process.communicate()
+errmsg = stderr.split('\n')
+l_dih = [x.split()[5][:-2] for x in errmsg if x.startswith('ERROR') and 'No default Proper Dih. types' in errmsg[errmsg.index(x)+1]]
+l_bond = [x.split()[5][:-2] for x in errmsg if x.startswith('ERROR') and 'No default Bond types' in errmsg[errmsg.index(x)+1]]
+l_angle = [x.split()[5][:-2] for x in errmsg if x.startswith('ERROR') and 'No default Angle Dih types' in errmsg[errmsg.index(x)+1]]
+#l_dih = ['224', '227', '230', '235', '240', '241', '243', '244', '245', '247', '248', '249', '250', '252', '255', '256', '257', '258']
+for a in l_dih:
+	print a
+
+with open('unk.itp','r') as f:
+	con1 = f.readlines()
+con1_1 = con1[con1.index('[ atoms ]\r\n')+3:con1.index('[ bonds ]\r\n')-1]
+conv1 = ['null']
+for line in con1_1:
+	conv1.append(line.split()[1])
+
+with open('ZINC06746902.itp','r') as f:
+	con2 = f.readlines()
+con2_1 = con2[con2.index('[ atoms ] \n')+2:con2.index('[ bonds ]\n')-1]
+conv2 = ['null']
+for line in con2_1:
+	conv2.append(line.split()[4][1:])
+
+
+error_dih = [con1[int(x)-1] for x in l_dih]
+error_bond = [con1[int(x)-1] for x in l_dih]
+error_angel = [con1[int(x)-1] for x in l_dih]
+
+
+def print_para(i, error_l, conv1, conv2, con1, con2):
+	conv3 = [7, 8, 11]
+	fill_l =[]
+	if error_l == []:
+		return None
+	for line1 in error_l:
+		l1 = con1[int(line1)-1].split()[:i]
+		l1_conv = [str(conv2.index(x)) for x in l1]
+		for line2 in con2:
+			l2 = line2.split()[:i]
+			if len(line2.split()) == conv3[i-2] and (l1_conv == l2 or l1_conv == l2[::-1]):
+				fill_l.append(line1)
+				sentence = ''
+				for j in range(0,i):
+					sentence = sentence + conv1[int(l1[j])] + ' '
+				for k in range(4,8):
+					sentence = sentence + line2.split()[k] + ' '
+				print sentence
+	print error_l
+	print fill_l
+			
+			
+print_para(2, l_bond, conv1, conv2, con1, con2)
+print_para(3, l_angle, conv1, conv2, con1, con2)
+print_para(4, l_dih, conv1, conv2, con1, con2)
